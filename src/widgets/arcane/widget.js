@@ -15,8 +15,18 @@ const widget = {
       map: (data) => asJson(data).data,
     },
     updates: {
-      endpoint: "environments/{env}/image-updates/summary",
-      map: (data) => asJson(data).data,
+      endpoint: "environments/{env}/containers",
+      map: (data) => {
+        const json = asJson(data);
+        const containerList = json?.data || [];
+        const containerUpdates = Array.isArray(containerList)
+          ? containerList.filter((c) => c?.updateInfo?.hasUpdate === true).length
+          : 0;
+        return {
+          imagesWithUpdates: containerUpdates,
+          containerUpdates,
+        };
+      },
     },
   },
 };
