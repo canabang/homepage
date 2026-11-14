@@ -5,7 +5,7 @@ description: Arcane Widget Configuration
 
 Learn more about [Arcane](https://github.com/getarcaneapp/arcane).
 
-**Allowed fields** (max 4): `running`, `stopped`, `total`, `images`, `images_used`, `images_unused`, `image_updates`.
+**Allowed fields** (max 4): `running`, `stopped`, `total`, `images`, `images_used`, `images_unused`, `image_updates`, `container_updates`.
 
 **Default fields**: `running`, `stopped`, `total`, `image_updates`.
 
@@ -20,4 +20,4 @@ widget:
 
 Using an API key for the widget requires permissions for: `containers:list`, `images:list`, and `image-updates:read`.
 
-Note: `image_updates` reports the number of containers with an available update.
+Note: `container_updates` is an opt-in field that counts containers with an available update (`updateInfo.hasUpdate`), whereas `image_updates` reports the image updates summary.

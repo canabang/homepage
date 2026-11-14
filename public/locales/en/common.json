@@ -1269,6 +1269,7 @@
         "containers": "Containers",
         "images": "Images",
         "image_updates": "Image Updates",
+        "container_updates": "Container Updates",
         "images_unused": "Unused",
         "environment_required": "Environment ID Required"
     },

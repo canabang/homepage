@@ -15,6 +15,10 @@ const widget = {
       map: (data) => asJson(data).data,
     },
     updates: {
+      endpoint: "environments/{env}/image-updates/summary",
+      map: (data) => asJson(data).data,
+    },
+    containerUpdates: {
       endpoint: "environments/{env}/containers?limit=-1",
       map: (data) => {
         const json = asJson(data);
@@ -23,7 +27,7 @@ const widget = {
           ? containerList.filter((c) => c?.updateInfo?.hasUpdate === true).length
           : 0;
         return {
-          imagesWithUpdates: containerUpdates,
+          containerUpdates,
         };
       },
     },

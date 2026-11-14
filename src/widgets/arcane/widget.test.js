@@ -9,7 +9,7 @@ describe("arcane widget config", () => {
     expectWidgetConfigShape(widget);
   });
 
-  it("counts containers with available updates in updates mapping", () => {
+  it("counts containers with available updates in containerUpdates mapping", () => {
     const payload = JSON.stringify({
       data: [
         { id: "1", updateInfo: { hasUpdate: true } },
@@ -19,11 +19,11 @@ describe("arcane widget config", () => {
       ],
     });
 
-    expect(widget.mappings.updates.map(payload)).toEqual({ imagesWithUpdates: 2 });
+    expect(widget.mappings.containerUpdates.map(payload)).toEqual({ containerUpdates: 2 });
   });
 
-  it("returns 0 updates when container list is missing or not an array", () => {
-    expect(widget.mappings.updates.map(JSON.stringify({}))).toEqual({ imagesWithUpdates: 0 });
-    expect(widget.mappings.updates.map(JSON.stringify({ data: null }))).toEqual({ imagesWithUpdates: 0 });
+  it("returns 0 containerUpdates when container list is missing or not an array", () => {
+    expect(widget.mappings.containerUpdates.map(JSON.stringify({}))).toEqual({ containerUpdates: 0 });
+    expect(widget.mappings.containerUpdates.map(JSON.stringify({ data: null }))).toEqual({ containerUpdates: 0 });
   });
 });

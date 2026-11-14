@@ -27,7 +27,7 @@ describe("widgets/arcane/component", () => {
     });
 
     // hooks always run; the empty endpoint is what skips the request
-    expect(useWidgetAPI).toHaveBeenCalledTimes(3);
+    expect(useWidgetAPI).toHaveBeenCalledTimes(4);
     useWidgetAPI.mock.calls.forEach((call) => expect(call[1]).toBe(""));
     expect(screen.getByText("arcane.environment_required")).toBeInTheDocument();
   });
@@ -128,5 +128,43 @@ describe("widgets/arcane/component", () => {
     expectBlockValue(container, "dockhand.stopped", 0);
     expectBlockValue(container, "dockhand.total", 0);
     expectBlockValue(container, "arcane.image_updates", 0);
+  });
+
+  it("fetches and renders container_updates only when configured in fields", () => {
+    useWidgetAPI.mockImplementation((widget, endpoint) => {
+      if (endpoint === "containers") {
+        return { data: { runningContainers: 3, totalContainers: 5, stoppedContainers: 2 }, error: undefined };
+      }
+      if (endpoint === "images") {
+        return { data: { totalImages: 7, imagesInuse: 4, imagesUnused: 3 }, error: undefined };
+      }
+      if (endpoint === "updates") {
+        return { data: { imagesWithUpdates: 4 }, error: undefined };
+      }
+      if (endpoint === "containerUpdates") {
+        return { data: { containerUpdates: 1 }, error: undefined };
+      }
+      return { data: undefined, error: undefined };
+    });
+
+    const { container } = renderWithProviders(
+      <Component
+        service={{
+          widget: {
+            type: "arcane",
+            env: "prod",
+            fields: ["running", "stopped", "image_updates", "container_updates"],
+          },
+        }}
+      />,
+      { settings: { hideErrors: false } },
+    );
+
+    expect(useWidgetAPI.mock.calls.some((call) => call[1] === "containerUpdates")).toBe(true);
+    expect(container.querySelectorAll(".service-block")).toHaveLength(4);
+    expectBlockValue(container, "docker.running", 3);
+    expectBlockValue(container, "dockhand.stopped", 2);
+    expectBlockValue(container, "arcane.image_updates", 4);
+    expectBlockValue(container, "arcane.container_updates", 1);
   });
 });

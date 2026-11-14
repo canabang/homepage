@@ -13,22 +13,34 @@ export default function Component({ service: configuredService }) {
   const { widget } = service;
 
   const envNotSet = widget.env == null || widget.env === "";
+  const wantsContainerUpdates = widget.fields.includes("container_updates");
 
   const { data: containers, error: containersError } = useWidgetAPI(widget, envNotSet ? "" : "containers");
   const { data: images, error: imagesError } = useWidgetAPI(widget, envNotSet ? "" : "images");
   const { data: updates, error: updatesError } = useWidgetAPI(widget, envNotSet ? "" : "updates");
+  const { data: containerUpdatesData, error: containerUpdatesError } = useWidgetAPI(
+    widget,
+    !envNotSet && wantsContainerUpdates ? "containerUpdates" : "",
+  );
 
   if (envNotSet) {
     return <Container service={service} error={t("arcane.environment_required")} />;
   }
 
   const error =
-    containersError ?? imagesError ?? updatesError ?? containers?.detail ?? images?.detail ?? updates?.detail;
+    containersError ??
+    imagesError ??
+    updatesError ??
+    (wantsContainerUpdates ? containerUpdatesError : undefined) ??
+    containers?.detail ??
+    images?.detail ??
+    updates?.detail ??
+    (wantsContainerUpdates ? containerUpdatesData?.detail : undefined);
   if (error) {
     return <Container service={service} error={error} />;
   }
 
-  if (!containers || !images || !updates) {
+  if (!containers || !images || !updates || (wantsContainerUpdates && !containerUpdatesData)) {
     return (
       <Container service={service}>
         <Block label="docker.running" field="arcane.running" />
@@ -38,6 +50,7 @@ export default function Component({ service: configuredService }) {
         <Block label="resources.used" field="arcane.images_used" />
         <Block label="arcane.images_unused" field="arcane.images_unused" />
         <Block label="arcane.image_updates" field="arcane.image_updates" />
+        <Block label="arcane.container_updates" field="arcane.container_updates" />
       </Container>
     );
   }
@@ -49,6 +62,7 @@ export default function Component({ service: configuredService }) {
   const imagesInuse = images?.imagesInuse ?? 0;
   const imagesUnused = images?.imagesUnused ?? 0;
   const imagesWithUpdates = updates?.imagesWithUpdates ?? 0;
+  const containerUpdates = containerUpdatesData?.containerUpdates ?? 0;
 
   return (
     <Container service={service}>
@@ -66,6 +80,11 @@ export default function Component({ service: configuredService }) {
         label="arcane.image_updates"
         field="arcane.image_updates"
         value={t("common.number", { value: imagesWithUpdates })}
+      />
+      <Block
+        label="arcane.container_updates"
+        field="arcane.container_updates"
+        value={t("common.number", { value: containerUpdates })}
       />
     </Container>
   );
