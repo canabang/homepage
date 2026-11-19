@@ -15,12 +15,18 @@ export default function Component({ service: configuredService }) {
   const envNotSet = widget.env == null || widget.env === "";
   const wantsContainerUpdates = widget.fields.includes("container_updates");
 
-  const { data: containers, error: containersError } = useWidgetAPI(widget, envNotSet ? "" : "containers");
-  const { data: images, error: imagesError } = useWidgetAPI(widget, envNotSet ? "" : "images");
-  const { data: updates, error: updatesError } = useWidgetAPI(widget, envNotSet ? "" : "updates");
+  const { version = 1 } = widget;
+  const containersEndpoint = version === 2 ? "containers_v2" : "containers";
+  const imagesEndpoint = version === 2 ? "images_v2" : "images";
+  const updatesEndpoint = version === 2 ? "updates_v2" : "updates";
+  const containerUpdatesEndpoint = version === 2 ? "containerUpdates_v2" : "containerUpdates";
+
+  const { data: containers, error: containersError } = useWidgetAPI(widget, envNotSet ? "" : containersEndpoint);
+  const { data: images, error: imagesError } = useWidgetAPI(widget, envNotSet ? "" : imagesEndpoint);
+  const { data: updates, error: updatesError } = useWidgetAPI(widget, envNotSet ? "" : updatesEndpoint);
   const { data: containerUpdatesData, error: containerUpdatesError } = useWidgetAPI(
     widget,
-    !envNotSet && wantsContainerUpdates ? "containerUpdates" : "",
+    !envNotSet && wantsContainerUpdates ? containerUpdatesEndpoint : "",
   );
 
   if (envNotSet) {

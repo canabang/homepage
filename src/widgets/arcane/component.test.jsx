@@ -32,6 +32,18 @@ describe("widgets/arcane/component", () => {
     expect(screen.getByText("arcane.environment_required")).toBeInTheDocument();
   });
 
+  it("calls v2 API endpoints when version is 2", () => {
+    useWidgetAPI.mockImplementation(() => ({ data: undefined, error: undefined }));
+
+    renderWithProviders(<Component service={{ widget: { type: "arcane", env: "prod", version: 2 } }} />, {
+      settings: { hideErrors: false },
+    });
+
+    expect(useWidgetAPI).toHaveBeenCalledTimes(4);
+    const endpoints = useWidgetAPI.mock.calls.map((call) => call[1]);
+    expect(endpoints).toEqual(["containers_v2", "images_v2", "updates_v2", ""]);
+  });
+
   it("shows an error when API calls return detail errors", () => {
     useWidgetAPI.mockImplementation(() => ({ data: { detail: "Specific API error" }, error: undefined }));
 
@@ -89,6 +101,28 @@ describe("widgets/arcane/component", () => {
 
     expect(container.querySelectorAll(".service-block")).toHaveLength(0);
     expect(screen.getByText("boom")).toBeInTheDocument();
+  });
+
+  it("queries the legacy endpoints by default", () => {
+    useWidgetAPI.mockImplementation(() => ({ data: undefined, error: undefined }));
+
+    renderWithProviders(<Component service={{ widget: { type: "arcane", env: "prod" } }} />, {
+      settings: { hideErrors: false },
+    });
+
+    const endpoints = useWidgetAPI.mock.calls.map((call) => call[1]);
+    expect(endpoints).toEqual(["containers", "images", "updates", ""]);
+  });
+
+  it("queries the v3 endpoints when version is 2", () => {
+    useWidgetAPI.mockImplementation(() => ({ data: undefined, error: undefined }));
+
+    renderWithProviders(<Component service={{ widget: { type: "arcane", env: "prod", version: 2 } }} />, {
+      settings: { hideErrors: false },
+    });
+
+    const endpoints = useWidgetAPI.mock.calls.map((call) => call[1]);
+    expect(endpoints).toEqual(["containers_v2", "images_v2", "updates_v2", ""]);
   });
 
   it("renders values when API data is available", () => {
@@ -166,5 +200,45 @@ describe("widgets/arcane/component", () => {
     expectBlockValue(container, "dockhand.stopped", 2);
     expectBlockValue(container, "arcane.image_updates", 4);
     expectBlockValue(container, "arcane.container_updates", 1);
+  });
+
+  it("fetches and renders containerUpdates_v2 when version is 2 and container_updates is configured", () => {
+    useWidgetAPI.mockImplementation((widget, endpoint) => {
+      if (endpoint === "containers_v2") {
+        return { data: { runningContainers: 14, totalContainers: 14, stoppedContainers: 0 }, error: undefined };
+      }
+      if (endpoint === "images_v2") {
+        return { data: { totalImages: 15, imagesInuse: 14, imagesUnused: 1 }, error: undefined };
+      }
+      if (endpoint === "updates_v2") {
+        return { data: { imagesWithUpdates: 6 }, error: undefined };
+      }
+      if (endpoint === "containerUpdates_v2") {
+        return { data: { containerUpdates: 5 }, error: undefined };
+      }
+      return { data: undefined, error: undefined };
+    });
+
+    const { container } = renderWithProviders(
+      <Component
+        service={{
+          widget: {
+            type: "arcane",
+            env: "prod",
+            version: 2,
+            fields: ["running", "stopped", "image_updates", "container_updates"],
+          },
+        }}
+      />,
+      { settings: { hideErrors: false } },
+    );
+
+    const endpoints = useWidgetAPI.mock.calls.map((call) => call[1]);
+    expect(endpoints).toEqual(["containers_v2", "images_v2", "updates_v2", "containerUpdates_v2"]);
+    expect(container.querySelectorAll(".service-block")).toHaveLength(4);
+    expectBlockValue(container, "docker.running", 14);
+    expectBlockValue(container, "dockhand.stopped", 0);
+    expectBlockValue(container, "arcane.image_updates", 6);
+    expectBlockValue(container, "arcane.container_updates", 5);
   });
 });
